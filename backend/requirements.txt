@@ -1,8 +1,8 @@
 alembic>=1.13,<2
 email-validator>=2.2,<3
 fastapi>=0.115,<1
-psycopg[binary]
+psycopg2-binary==2.9.10
 pydantic-settings>=2.6,<3
 sqlalchemy>=2.0,<3
 uvicorn[standard]>=0.34,<1
-
+uvicorn backend.app.main:app --host 0.0.0.0 --port $PORT
