@@ -368,7 +368,10 @@ def export_data(context: AuthContext = Depends(require_auth), db: Session = Depe
     }
     return Response(content=json.dumps(payload, ensure_ascii=False), media_type="application/json", headers={"Content-Disposition": "attachment; filename=lila-backup.json"})
 
-frontend_dir = Path(__file__).resolve().parents[2] / "frontend"
+# مسیر اصلاح‌شده برای پیداکردن دقیق پوشه فرانت‌اند در سرور
+import os
+frontend_dir = Path("/app/frontend") if os.path.exists("/app/frontend") else Path(__file__).resolve().parents[2] / "frontend"
+
 if frontend_dir.exists():
     @app.get("/")
     def frontend_home():
