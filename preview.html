@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#07111c">
+  <title>lila · پیش‌نمایش رابط</title>
+  <link rel="stylesheet" href="/src/styles.css?v=9">
+</head>
+<body>
+  <div id="app"></div>
+  <div id="modal-root"></div>
+  <script>
+    window.LILA_DISABLE_SW = true;
+    window.LILA_PREVIEW = true;
+    const tenants = [
+      { id: "preview-1", name: "مستأجر نمونه ۱", unit: "واحد نمونه ۳", status: "current", balance: 0, monthly_rent: 30000000, days_late: 0, contract_start: "۱۴۰۵/۰۱/۰۱", amount_due: 30000000, amount_paid: 30000000, notes: "دادهٔ ساختگی برای بررسی ظاهر", payments: [{ paid_on: "۱۴۰۵/۰۱/۱۵", amount: 30000000, note: "پرداخت نمونه" }] },
+      { id: "preview-2", name: "مستأجر نمونه ۲", unit: "واحد نمونه ۵", status: "overdue", balance: 12500000, monthly_rent: 28000000, days_late: 8, contract_start: "۱۴۰۴/۱۰/۰۱", amount_due: 28000000, amount_paid: 15500000, notes: "دادهٔ ساختگی برای بررسی وضعیت عقب‌افتاده", payments: [{ paid_on: "۱۴۰۵/۰۱/۱۲", amount: 15500000, note: "پرداخت نمونه" }] },
+      { id: "preview-3", name: "مستأجر نمونه ۳", unit: "واحد نمونه ۸", status: "current", balance: 0, monthly_rent: 35000000, days_late: 0, contract_start: "۱۴۰۵/۰۲/۰۱", amount_due: 35000000, amount_paid: 35000000, notes: "", payments: [{ paid_on: "۱۴۰۵/۰۲/۰۱", amount: 35000000, note: "پرداخت نمونه" }] }
+    ];
+    const expenses = [
+      { id: "expense-1", category: "تعمیرات", spent_on: "۱۴۰۵/۰۲/۰۵", amount: 4500000, note: "هزینهٔ نمونه" },
+      { id: "expense-2", category: "شارژ", spent_on: "۱۴۰۵/۰۲/۰۱", amount: 1200000, note: "" }
+    ];
+    const obligations = [
+      { id: "obligation-1", title: "تعهد نمونه", tenant_name: "ملک نمونه", due_date: "۱۴۰۵/۰۲/۲۰", amount: 8000000, remaining: 8000000, status: "open" }
+    ];
+    const user = { display_name: "کاربر نمونه", role: "manager", workspace_name: "پیش‌نمایش رابط" };
+    const json = (body, status = 200) => Promise.resolve(new Response(JSON.stringify(body), { status, headers: { "Content-Type": "application/json" } }));
+    window.fetch = (input) => {
+      const path = new URL(input, location.href).pathname;
+      if (path === "/api/auth/me" || path === "/api/auth/login") return json({ user });
+      if (path === "/api/auth/logout") return json({ ok: true });
+      if (path === "/api/tenants") return json(tenants);
+      if (path.startsWith("/api/tenants/")) return json(tenants.find((item) => item.id === path.split("/").at(-1)) || tenants[0]);
+      if (path === "/api/dashboard") return json({ expenses_total: 5700000, obligations_remaining: 8000000 });
+      if (path === "/api/expenses") return json(expenses);
+      if (path === "/api/obligations") return json(obligations);
+      if (path === "/api/reports/summary") return json({ total_paid: 80500000, total_balance: 12500000, total_expenses: 5700000, net_balance: 69100000, overdue_count: 1, tenant_count: 3 });
+      return json({ ok: true });
+    };
+  </script>
+  <script type="module" src="/src/main.js?v=9"></script>
+</body>
+</html>
