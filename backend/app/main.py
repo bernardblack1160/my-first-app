@@ -1,16 +1,21 @@
+import os
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
-import os
 
 app = FastAPI()
 
-# مسیر دایرکتوری فرانت‌اند (به صورت نسبی)
-frontend_dir = os.path.join(os.path.dirname(__file__), "..", "..", "frontend")
+# یافتن مسیر مطلق دایرکتوری ریشه پروژه
+base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+frontend_dir = os.path.join(base_dir, "frontend")
 
 # سرو کردن فایل‌های استاتیک
-app.mount("/static", StaticFiles(directory=os.path.join(frontend_dir, "src")), name="static")
-app.mount("/assets", StaticFiles(directory=os.path.join(frontend_dir, "assets")), name="assets")
+# چک می‌کنیم دایرکتوری وجود دارد تا کرش نکند
+if os.path.exists(os.path.join(frontend_dir, "src")):
+    app.mount("/static", StaticFiles(directory=os.path.join(frontend_dir, "src")), name="static")
+
+if os.path.exists(os.path.join(frontend_dir, "assets")):
+    app.mount("/assets", StaticFiles(directory=os.path.join(frontend_dir, "assets")), name="assets")
 
 # مسیرهای اصلی اپلیکیشن
 @app.get("/")
