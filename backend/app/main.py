@@ -367,10 +367,23 @@ def export_data(context: AuthContext = Depends(require_auth), db: Session = Depe
         "settings": [{"key": item.key, "value": item.value} for item in settings_rows],
     }
     return Response(content=json.dumps(payload, ensure_ascii=False), media_type="application/json", headers={"Content-Disposition": "attachment; filename=lila-backup.json"})
-@app.get("/")
-def read_root():
-    return {"status": "backend is running", "database": "connected"}
+    frontend_dir = Path(__file__).resolve().parents[2]
 
-@app.get("/api/health")
-def health():
-    return {"status": "ok"}
+if (frontend_dir / "index.html").exists():
+    @app.get("/", include_in_schema=False)
+    def serve_index():
+        return FileResponse(frontend_dir / "index.html", headers={"Cache-Control": "no-store"})
+
+    @app.get("/sw.js", include_in_schema=False)
+    def serve_sw():
+        return FileResponse(frontend_dir / "sw.js", headers={"Cache-Control": "no-store"})
+
+    @app.get("/worker.js", include_in_schema=False)
+    def serve_worker():
+        return FileResponse(frontend_dir / "worker.js", headers={"Cache-Control": "no-store"})
+
+    @app.get("/manifest.webmanifest", include_in_schema=False)
+    def serve_manifest():
+        return FileResponse(frontend_dir / "manifest.webmanifest", media_type="application/manifest+json")
+
+    app.mount("/", StaticFiles(directory=frontend_dir, html=True), name="frontend")
