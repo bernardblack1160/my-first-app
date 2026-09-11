@@ -5,28 +5,28 @@ from fastapi.responses import FileResponse
 
 app = FastAPI()
 
-# مسیرهای ریشه
+# پیدا کردن مسیر اصلی پروژه (Root) بر اساس موقعیت این فایل
+# چون main.py در backend/app/ است، دو مرحله به عقب برمی‌گردیم تا به src برسیم
 current_file_path = os.path.abspath(__file__)
 base_dir = os.path.dirname(os.path.dirname(os.path.dirname(current_file_path)))
+frontend_dir = os.path.join(base_dir, "frontend")
+
+@app.get("/api/health")
+async def health_check():
+    return {"status": "ok"}
+
+# سرو کردن فایل‌های استاتیک از پوشه frontend
+if os.path.exists(frontend_dir):
+    app.mount("/assets", StaticFiles(directory=os.path.join(frontend_dir, "assets")), name="assets")
+    # اگر پوشه src داخل frontend بود، اینجا اصلاح می‌شود، اما طبق گزارش شما فایل‌ها در frontend هستند
+else:
+    print(f"Warning: frontend directory not found at {frontend_dir}")
 
 @app.get("/")
 async def serve_index():
-    # عیب‌یابی: پیدا کردن فایل‌ها
-    file_list = []
-    if os.path.exists(base_dir):
-        file_list = os.listdir(base_dir)
-    
-    return {
-        "error": "index.html not found",
-        "current_base_dir": base_dir,
-        "files_in_base_dir": file_list
-    }
+    index_path = os.path.join(frontend_dir, "index.html")
+    if os.path.exists(index_path):
+        return FileResponse(index_path)
+    return {"error": f"index.html not found at {index_path}"}
 
-@app.get("/api/debug")
-async def debug_files():
-    # یک مسیر کمکی برای دیدن ساختار پوشه‌ها
-    structure = {}
-    for root, dirs, files in os.walk(base_dir):
-        structure[root] = files
-        if len(structure) > 10: break # برای جلوگیری از خروجی زیاد
-    return structure
+# مسیرهای API شما در اینجا ادامه می‌یابد...
