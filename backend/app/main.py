@@ -5,9 +5,8 @@ from fastapi.responses import FileResponse
 
 app = FastAPI()
 
-# مسیر فایل‌های استاتیک و ایندکس
-# اینجا داریم به صورت مستقیم می‌گوییم فایل‌ها در پوشه frontend در ریشه پروژه هستند
-BASE_DIR = os.getcwd() 
+# مسیر فایل‌ها را به صورت دستی و دقیق‌تر ست می‌کنیم
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 FRONTEND_DIR = os.path.join(BASE_DIR, "frontend")
 
 # مسیرهای API
@@ -15,7 +14,7 @@ FRONTEND_DIR = os.path.join(BASE_DIR, "frontend")
 async def health_check():
     return {"status": "ok"}
 
-# سرو کردن فایل‌های استاتیک (مثل عکس‌ها و فایل‌های js/css)
+# سرو کردن فایل‌های استاتیک
 app.mount("/src", StaticFiles(directory=os.path.join(FRONTEND_DIR, "src")), name="src")
 app.mount("/assets", StaticFiles(directory=os.path.join(FRONTEND_DIR, "assets")), name="assets")
 
