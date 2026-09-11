@@ -5,19 +5,19 @@ from fastapi.responses import FileResponse
 
 app = FastAPI()
 
-# چون پوشه frontend الان داخل backend هست، مسیرش میشه دقیقاً کنار این فایل
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-FRONTEND_DIR = os.path.join(BASE_DIR, "frontend")
+# مسیر فایل‌های فرانت‌اند
+FRONTEND_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "frontend")
 
-@app.get("/api/health")
-async def health_check():
-    return {"status": "ok"}
-
-# مستقیم به زیرمجموعه‌های backend اشاره می‌کنیم
+# سرو کردن فایل‌های استاتیک
 app.mount("/src", StaticFiles(directory=os.path.join(FRONTEND_DIR, "src")), name="src")
-app.mount("/assets", StaticFiles(directory=os.path.join(FRONTEND_DIR, "assets")), name="assets")
 
 @app.get("/")
-async def serve_index():
+async def serve_frontend():
     return FileResponse(os.path.join(FRONTEND_DIR, "index.html"))
 
+@app.get("/{path:path}")
+async def serve_static(path: str):
+    file_path = os.path.join(FRONTEND_DIR, path)
+    if os.path.exists(file_path) and os.path.isfile(file_path):
+        return FileResponse(file_path)
+    return FileResponse(os.path.join(FRONTEND_DIR, "index.html"))
