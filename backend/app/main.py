@@ -444,45 +444,53 @@ def export_data(current_user: models.User = Depends(require_manager), db: Sessio
     )
 
 
-def resolve_frontend_dir() -> Path:
-    repo_root = Path(__file__).resolve().parents[2]
+def resolve_frontend_dir() -> Path | None:
+    current_dir = Path(__file__).resolve().parent
+    repo_root = current_dir.parents[1] if len(current_dir.parents) >= 2 else current_dir
     candidates = (
         repo_root / "frontend",
         repo_root,
-        Path(__file__).resolve().parents[1] / "frontend",
-        Path(__file__).resolve().parents[1],
-        Path(__file__).resolve().parent / "frontend",
-        Path(__file__).resolve().parent,
+        current_dir.parent / "frontend",
+        current_dir.parent,
+        current_dir / "frontend",
+        current_dir,
+        Path("/opt/render/project/src/frontend"),
+        Path("/opt/render/project/src"),
     )
     for candidate in candidates:
         if (candidate / "index.html").is_file():
             return candidate
-    locations = ", ".join(str(candidate) for candidate in candidates)
-    raise RuntimeError(f"Frontend index.html not found. Checked: {locations}")
+    return None
 
 
 frontend_dir = resolve_frontend_dir()
-print(f"Lila frontend directory: {frontend_dir}")
 
 
-@app.get("/", include_in_schema=False)
-def serve_root():
-    return FileResponse(frontend_dir / "index.html", headers={"Cache-Control": "no-store, max-age=0"})
+if frontend_dir:
+    @app.get("/", include_in_schema=False)
+    def serve_root():
+        return FileResponse(frontend_dir / "index.html", headers={"Cache-Control": "no-store, max-age=0"})
 
+    @app.get("/worker.js", include_in_schema=False)
+    def serve_worker():
+        if (frontend_dir / "worker.js").is_file():
+            return FileResponse(frontend_dir / "worker.js", headers={"Cache-Control": "no-store, max-age=0"})
+        return Response(status_code=404)
 
-@app.get("/worker.js", include_in_schema=False)
-def serve_worker():
-    return FileResponse(frontend_dir / "worker.js", headers={"Cache-Control": "no-store, max-age=0"})
+    @app.get("/sw.js", include_in_schema=False)
+    def serve_sw():
+        if (frontend_dir / "sw.js").is_file():
+            return FileResponse(frontend_dir / "sw.js", headers={"Cache-Control": "no-store, max-age=0"})
+        return Response(status_code=404)
 
+    @app.get("/manifest.webmanifest", include_in_schema=False)
+    def serve_manifest():
+        if (frontend_dir / "manifest.webmanifest").is_file():
+            return FileResponse(frontend_dir / "manifest.webmanifest")
+        return Response(status_code=404)
 
-@app.get("/sw.js", include_in_schema=False)
-def serve_sw():
-    return FileResponse(frontend_dir / "sw.js", headers={"Cache-Control": "no-store, max-age=0"})
-
-
-@app.get("/manifest.webmanifest", include_in_schema=False)
-def serve_manifest():
-    return FileResponse(frontend_dir / "manifest.webmanifest")
-
-
-app.mount("/", StaticFiles(directory=frontend_dir, html=True), name="frontend")
+    app.mount("/", StaticFiles(directory=frontend_dir, html=True), name="frontend")
+else:
+    @app.get("/", include_in_schema=False)
+    def serve_root_fallback():
+        return {"status": "ok", "message": "Backend running. Frontend files not found in root."}
