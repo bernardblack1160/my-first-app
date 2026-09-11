@@ -367,22 +367,10 @@ def export_data(context: AuthContext = Depends(require_auth), db: Session = Depe
         "settings": [{"key": item.key, "value": item.value} for item in settings_rows],
     }
     return Response(content=json.dumps(payload, ensure_ascii=False), media_type="application/json", headers={"Content-Disposition": "attachment; filename=lila-backup.json"})
+@app.get("/")
+def read_root():
+    return {"status": "backend is running", "database": "connected"}
 
-# مسیر اصلاح‌شده برای پیداکردن دقیق پوشه فرانت‌اند در سرور
-import os
-frontend_dir = Path("/app/frontend") if os.path.exists("/app/frontend") else Path(__file__).resolve().parents[2] / "frontend"
-
-if frontend_dir.exists():
-    @app.get("/")
-    def frontend_home():
-        return FileResponse(frontend_dir / "index.html", headers={"Cache-Control": "no-store"})
-
-    @app.get("/sw.js")
-    def service_worker():
-        return FileResponse(frontend_dir / "sw.js", media_type="application/javascript", headers={"Cache-Control": "no-store"})
-
-    @app.get("/manifest.webmanifest")
-    def manifest():
-        return FileResponse(frontend_dir / "manifest.webmanifest", media_type="application/manifest+json")
-
-    app.mount("/", StaticFiles(directory=frontend_dir, html=True), name="frontend")
+@app.get("/api/health")
+def health():
+    return {"status": "ok"}
