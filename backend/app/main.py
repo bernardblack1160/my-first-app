@@ -6,9 +6,14 @@ from pathlib import Path
 
 app = FastAPI()
 
-# مسیر فایل‌های فرانت‌اند نسبت به محل اجرای برنامه در سرور
-BASE_DIR = Path.cwd()
+# یافتن مسیر مطلق ریشه پروژه (جایی که پوشه frontend کنار پوشه backend باشد)
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
 FRONTEND_DIR = BASE_DIR / "frontend"
+
+# چاپ مسیر برای دیباگ در لاگ‌های Render
+print(f"DEBUG: Working Directory: {os.getcwd()}")
+print(f"DEBUG: Frontend Path: {FRONTEND_DIR}")
+print(f"DEBUG: Exists: {FRONTEND_DIR.exists()}")
 
 # سرو کردن فایل‌های استاتیک
 app.mount("/src", StaticFiles(directory=FRONTEND_DIR / "src"), name="src")
@@ -23,4 +28,3 @@ async def serve_static(path: str):
     if file_path.is_file():
         return FileResponse(file_path)
     return FileResponse(FRONTEND_DIR / "index.html")
-
