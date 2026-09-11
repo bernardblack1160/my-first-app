@@ -11,7 +11,7 @@ from sqlalchemy.orm import Session
 
 from . import auth, calculator, config, db, jalali, models, schemas
 
-settings = config.get_settings()
+settings = config.settings
 app = FastAPI(title="Lila API", version="2.1.0")
 
 _FIELD_LABELS = {
@@ -491,7 +491,7 @@ def export_data(
 
 
 frontend_dir = Path(__file__).resolve().parent.parent.parent / "frontend"
-if frontend_dir.exists():
+if frontend_dir.exists() and (frontend_dir / "index.html").exists():
 
     @app.get("/", response_class=FileResponse)
     def serve_index():
