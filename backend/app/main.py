@@ -1,5 +1,6 @@
 from datetime import date, datetime, timezone
 import json
+import os
 from decimal import Decimal
 from pathlib import Path
 from uuid import UUID
@@ -367,9 +368,16 @@ def export_data(context: AuthContext = Depends(require_auth), db: Session = Depe
         "settings": [{"key": item.key, "value": item.value} for item in settings_rows],
     }
     return Response(content=json.dumps(payload, ensure_ascii=False), media_type="application/json", headers={"Content-Disposition": "attachment; filename=lila-backup.json"})
-    frontend_dir = Path(__file__).resolve().parents[2]
 
-if (frontend_dir / "index.html").exists():
+
+frontend_candidates = [
+    Path("/app/frontend"),
+    Path(__file__).resolve().parents[2] / "frontend",
+    Path(__file__).resolve().parents[2],
+]
+frontend_dir = next((p for p in frontend_candidates if (p / "index.html").exists()), None)
+
+if frontend_dir:
     @app.get("/", include_in_schema=False)
     def serve_index():
         return FileResponse(frontend_dir / "index.html", headers={"Cache-Control": "no-store"})
@@ -386,4 +394,4 @@ if (frontend_dir / "index.html").exists():
     def serve_manifest():
         return FileResponse(frontend_dir / "manifest.webmanifest", media_type="application/manifest+json")
 
-    app.mount("/", StaticFiles(directory=frontend_dir, html=True), name="frontend")
+    app.mount("/", StaticFiles(directory=str(frontend_dir), html=True), name="frontend")
